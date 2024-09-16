@@ -1,3 +1,4 @@
+//9/16/24
 package edu.montana.csci.csci440.homeworks.hwk1;
 
 import edu.montana.csci.csci440.DBTest;
@@ -16,6 +17,7 @@ public class Homework1 extends DBTest {
     void selectArtistsWhoseNameHasAnAInIt(){
         String query = """
           SELECT * FROM artists
+          WHERE  name LIKE '%a%'
           """;
         List<Map<String, Object>> results = exec(query);
         assertEquals(211, results.size());
@@ -27,7 +29,12 @@ public class Homework1 extends DBTest {
      */
     void selectAllArtistsWithMoreThanOneAlbum(){
         String query = """
-          SELECT * FROM artists
+          SELECT * FROM artists WHERE ArtistId IN(
+            SELECT ArtistID
+            FROM albums
+            GROUP BY ArtistID
+            HAVING COUNT(AlbumID) > 1
+          )
           """;
         List<Map<String, Object>> results = exec(query);
         assertEquals(56, results.size());
@@ -43,7 +50,9 @@ public class Homework1 extends DBTest {
         String query = """
                 SELECT tracks.Name as TrackName, albums.Title as AlbumTitle, artists.Name as ArtistsName
                 FROM tracks
-                -- NEED TO DO SOME JOINS HERE KIDS
+                JOIN albums ON tracks.AlbumID = albums.AlbumID
+                JOIN artists ON albums.ArtistID = artists.ArtistID
+                WHERE tracks.Milliseconds > 6 * 60000
                 """;
         List<Map<String, Object>> results = exec(query);
 
