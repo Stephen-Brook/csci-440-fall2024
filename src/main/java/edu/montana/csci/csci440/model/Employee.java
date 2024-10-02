@@ -42,9 +42,15 @@ public class Employee extends Model {
         if (firstName == null || "".equals(firstName)) {
             addError("FirstName can't be null or blank!");
         }
-        // TODO - add in additional validations:
+        // TODO - add in additional validations:        finished
         //   last name can't be null or blank
         //   email can't be null or blank and must contain an @
+        if (lastName == null || "".equals(lastName)) {
+            addError("LastName can't be null or blank!");
+        }
+        if (email == null || "".equals(email) || !email.contains("@")) {
+            addError("Email can't be null or blank and must contain an @!");
+        }
         return !hasErrors();
     }
 
@@ -144,6 +150,9 @@ public class Employee extends Model {
         }
     }
     public Employee getBoss() {
+        if(reportsTo != null){
+            return Employee.find(reportsTo);
+        }
         return null;
     }
 
@@ -154,9 +163,10 @@ public class Employee extends Model {
     public static List<Employee> all(int page, int count) {
          try {
             try(Connection connect = DB.connect();
-                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM employees LIMIT ?")) {
+                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM employees LIMIT ? OFFSET ?")) {
                 ArrayList<Employee> result = new ArrayList<>();
                 stmt.setInt(1, count);
+                stmt.setInt(2, (page - 1) * count);
                 ResultSet resultSet = stmt.executeQuery();
                 while (resultSet.next()) {
                     result.add(new Employee(resultSet));
@@ -169,7 +179,19 @@ public class Employee extends Model {
     }
 
     public static Employee findByEmail(String newEmailAddress) {
-        throw new UnsupportedOperationException("Implement me");
+        try (Connection conn = DB.connect();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT * FROM employees WHERE Email = ?")) {
+            stmt.setString(1, newEmailAddress);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                return new Employee(resultSet);
+            } else {
+                return null;  // No employee found
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Employee find(long employeeId) {
@@ -195,7 +217,12 @@ public class Employee extends Model {
     }
 
     public void setReportsTo(Employee employee) {
-        // TODO implement
+        if (employee != null) {
+            this.reportsTo = employee.getEmployeeId();
+        }
+        else{
+            this.reportsTo = null;
+        }
     }
 
     public static class SalesSummary {

@@ -166,10 +166,19 @@ public class Track extends Model {
                 PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM tracks " +
                         "WHERE name LIKE ? " +
                         "AND Milliseconds <= ? "  +
-                        "LIMIT ?")) {
+                        "AND Miliseconds >= ?" +
+                        "AND ArtistID = ?" +
+                        "AND AlbumID = ?" +
+                        "LIMIT ? OFFSET ?")) {
                 ArrayList<Track> result = new ArrayList<>();
                 stmt.setString(1, "%" + search + "%");
                 //TODO add additional fields to search
+                stmt.setLong(2, (long) maxRuntime);
+                stmt.setLong(3, (long) minRuntime);
+                stmt.setLong(4, artistId);
+                stmt.setLong(5, albumId);
+                stmt.setLong(6, count);
+                stmt.setLong(7, (page - 1) * count);
                 ResultSet resultSet = stmt.executeQuery();
                 while (resultSet.next()) {
                     result.add(new Track(resultSet));

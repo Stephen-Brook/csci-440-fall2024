@@ -33,6 +33,7 @@ public class Customer extends Model {
         lastName = results.getString("LastName");
         customerId = results.getLong("CustomerId");
         supportRepId = results.getLong("SupportRepId");
+        email = results.getString("Email");
     }
 
     public String getFirstName() {
@@ -60,7 +61,22 @@ public class Customer extends Model {
     }
 
     public static List<Customer> all(int page, int count) {
-        return Collections.emptyList();
+        List<Customer> customers = new LinkedList<>();
+        try {
+            try (Connection conn = DB.connect();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT * FROM Customers LIMIT ? OFFSET ?")) {
+                stmt.setInt(1, count);
+                stmt.setInt(2, (page - 1) * count);
+                ResultSet resultSet = stmt.executeQuery();
+                while (resultSet.next()) {
+                    customers.add(new Customer(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return customers;
     }
 
     public static Customer find(long customerId) {
