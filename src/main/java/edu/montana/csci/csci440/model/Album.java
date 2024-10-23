@@ -80,12 +80,12 @@ public class Album extends Model {
     public boolean verify() {
         _errors.clear();
         if (getTitle() == null) {
-            _errors.add("Title was null");
+            addError("Title is null");
         }
         if (artistId == null) {
-            _errors.add("ArtistId was null");
+            addError("ArtistId is null");
         }
-        return _errors.isEmpty();
+        return !hasErrors();
     }
 
     public static List<Album> all() {

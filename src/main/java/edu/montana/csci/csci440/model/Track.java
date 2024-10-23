@@ -22,6 +22,8 @@ public class Track extends Model {
     private Long milliseconds;
     private Long bytes;
     private BigDecimal unitPrice;
+//    private String albumTitle;
+//    private String artistName;
 
     public static final String REDIS_CACHE_KEY = "cs440-tracks-count-cache";
 
@@ -42,6 +44,7 @@ public class Track extends Model {
         albumId = results.getLong("AlbumId");
         mediaTypeId = results.getLong("MediaTypeId");
         genreId = results.getLong("GenreId");
+        //get new fields
     }
 
     public static Track find(long i) {
@@ -162,22 +165,47 @@ public class Track extends Model {
                                              String search, Integer artistId, Integer albumId,
                                              Integer maxRuntime, Integer minRuntime) {
         try {
+            String sql =
+                    "SELECT  * FROM tracks " +
+                    "WHERE name LIKE ? ";
+            ArrayList<Object> args = new ArrayList<>();
+
+            if(artistId != null){
+                sql += "AND artistId = ?";
+                args.add(artistId);
+            }
+            if(albumId != null){
+                sql += "AND albumId = ?";
+                args.add(albumId);
+            }
+            if(maxRuntime != null){
+                sql += "AND maxRuntime = ?";
+                args.add(maxRuntime);
+            }
+            if(minRuntime != null){
+                sql += "AND minRuntime = ?";
+                args.add(minRuntime);
+            }
+            sql += " LIMIT ? OFFSET ?";
+            args.add(count);
+            args.add((page - 1) * count);
+
             try(Connection connect = DB.connect();
-                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM tracks " +
-                        "WHERE name LIKE ? " +
-                        "AND Milliseconds <= ? "  +
-                        "AND Miliseconds >= ?" +
-                        "AND ArtistID = ?" +
-                        "AND AlbumID = ?" +
-                        "LIMIT ? OFFSET ?")) {
+                PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ArrayList<Track> result = new ArrayList<>();
                 stmt.setString(1, "%" + search + "%");
-                //TODO add additional fields to search
-                stmt.setLong(2, (long) maxRuntime);
-                stmt.setLong(3, (long) minRuntime);
-                stmt.setLong(4, artistId);
-                stmt.setLong(5, albumId);
-                stmt.setLong(6, count);
+
+                for(int i = 0; i < args.size(); i++){
+                    Object arg = args.get(i);
+                    stmt.setObject(i + 2, arg);
+                }
+
+//                //TODO add additional fields to search
+//                stmt.setLong(2, (long) maxRuntime);
+//                stmt.setLong(3, (long) minRuntime);
+//                stmt.setLong(4, artistId);
+//                stmt.setLong(5, albumId);
+//                stmt.setLong(6, count);
                 stmt.setLong(7, (page - 1) * count);
                 ResultSet resultSet = stmt.executeQuery();
                 while (resultSet.next()) {
@@ -224,9 +252,10 @@ public class Track extends Model {
     public static List<Track> all(int page, int count, String orderBy) {
         try {
             try(Connection connect = DB.connect();
-                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM tracks LIMIT ?")) {
+                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM tracks LIMIT ? OFFSET ?")) {
                 ArrayList<Track> result = new ArrayList<>();
                 stmt.setInt(1, count);
+                stmt.setInt(2, (page - 1) * count);
                 ResultSet resultSet = stmt.executeQuery();
                 while (resultSet.next()) {
                     result.add(new Track(resultSet));
@@ -236,5 +265,49 @@ public class Track extends Model {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }    }
+
+//    public boolean create() {
+//        if (verify()) {
+//            try (Connection conn = DB.connect();
+//                 PreparedStatement stmt = conn.prepareStatement(
+//                         "INSERT INTO Tracks (Name, Milliseconds, Bytes, UnitPrice, TrackId, AlbumId, MediaTypeId, GenreId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+//                stmt.setString(1, this.getName());
+//                stmt.setLong(2, this.getMilliseconds());
+//                stmt.setLong(3, this.getBytes());
+//                stmt.setBigDecimal(4, this.getUnitPrice());
+//                stmt.setLong(5, this.getTrackId());
+//                stmt.setLong(6, this.getAlbumId());
+//                stmt.setLong(7, this.getMediaTypeId());
+//                stmt.setLong(8, this.getGenreId());
+//
+//                stmt.executeUpdate();
+//                this.trackId = DB.getLastID(conn);
+//                return true;
+//            } catch (SQLException sqlException) {
+//                throw new RuntimeException(sqlException);
+//            }
+//        }
+//        return false;
+//    }
+
+    /*
+    public boolean equals(Object o){
+        if (this == o){
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()){
+            return false;
+        }
+        if(!super.equals(o)){
+            return false;
+        }
+        Track track = (Track) o;
+        return Objects.equals(trackId, track.trackId) && Objects.equals(albumId, track.albumId) && Objects.equals(mediaTypeId, track.mediaTypeId) && Objects.equals(genreId, track.genreId) && Objects.equals(name, track.name) && Objects.equals(milliseconds, track.milliseconds) && Objects.equals(bytes, track.bytes) && Objects.equals(unitPrice, track.unitPrice);
+    }
+
+    public int hashCode(){
+        return Objects.hash(super.hashCode(), trackId, albumId, mediaTypeId, genreId, name, milliseconds, bytes, unitPrice);
+    }
+    */
 
 }
