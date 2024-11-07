@@ -45,21 +45,27 @@ public class Homework4 extends DBTest {
         try(Connection connection = DB.connect()){
             connection.setAutoCommit(false);
 
-            PreparedStatement subtract = connection.prepareStatement("TODO");
-            subtract.setLong(1, 0);
-            subtract.setLong(2, 0);
+            PreparedStatement subtract = connection.prepareStatement("UPDATE tracks SET Milliseconds = Milliseconds - ? WHERE TrackId = ?");
+            subtract.setLong(1, milliseconds);
+            subtract.setLong(2, from.getTrackId());
             subtract.execute();
 
             if(throwException) {
                 throw new RuntimeException();
             }
 
-            PreparedStatement add = connection.prepareStatement("TODO");
-            add.setLong(1, 0);
-            add.setLong(2, 0);
+            PreparedStatement add = connection.prepareStatement("UPDATE tracks SET Milliseconds = Milliseconds + ? WHERE TrackId = ?");
+            add.setLong(1, milliseconds);
+            add.setLong(2, to.getTrackId());
             add.execute();
 
             // commit with the connection
+            try{
+                connection.commit();
+            }
+            catch(SQLException e){
+                connection.rollback();
+            }
         }
     }
 
@@ -97,6 +103,7 @@ public class Homework4 extends DBTest {
     public void allInvoicesIn2011() {
         String query = """
           SELECT * from invoices
+          WHERE strftime('%Y', InvoiceDate) = '2011'
           """;
         List<Map<String, Object>> results = exec(query);
         assertEquals(83, results.size());
