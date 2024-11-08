@@ -36,31 +36,25 @@
 Resetting DB After Test...
 Resetting DB After Test...
 Resetting DB After Test...
-[ERROR] Tests run: 3, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.474 s <<< FAILURE! - in edu.montana.csci.csci440.homeworks.hwk4.Homework4
+[ERROR] Tests run: 3, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.38 s <<< FAILURE! - in edu.montana.csci.csci440.homeworks.hwk4.Homework4
 [ERROR] useATransactionToSafelyMoveMillisecondsFromOneTrackToAnother  Time elapsed: 0.006 s  <<< ERROR!
-org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (near "TODO": syntax error)
-	at edu.montana.csci.csci440.homeworks.hwk4.Homework4.transferMilliseconds(Homework4.java:48)
+java.lang.NullPointerException: Cannot invoke "java.lang.Long.longValue()" because the return value of "edu.montana.csci.csci440.model.Track.getTrackId()" is null
+	at edu.montana.csci.csci440.homeworks.hwk4.Homework4.transferMilliseconds(Homework4.java:50)
 	at edu.montana.csci.csci440.homeworks.hwk4.Homework4.useATransactionToSafelyMoveMillisecondsFromOneTrackToAnother(Homework4.java:35)
-
-[ERROR] allInvoicesIn2011  Time elapsed: 0.019 s  <<< FAILURE!
-org.opentest4j.AssertionFailedError: expected: <83> but was: <412>
-	at edu.montana.csci.csci440.homeworks.hwk4.Homework4.allInvoicesIn2011(Homework4.java:102)
 
 [INFO] 
 [INFO] Results:
 [INFO] 
-[ERROR] Failures: 
-[ERROR]   Homework4.allInvoicesIn2011:102 expected: <83> but was: <412>
 [ERROR] Errors: 
-[ERROR]   Homework4.useATransactionToSafelyMoveMillisecondsFromOneTrackToAnother:35->transferMilliseconds:48 » SQLite
+[ERROR]   Homework4.useATransactionToSafelyMoveMillisecondsFromOneTrackToAnother:35->transferMilliseconds:50 NullPointer
 [INFO] 
-[ERROR] Tests run: 3, Failures: 1, Errors: 1, Skipped: 0
+[ERROR] Tests run: 3, Failures: 0, Errors: 1, Skipped: 0
 [INFO] 
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  1.813 s
-[INFO] Finished at: 2024-11-04T11:14:15-07:00
+[INFO] Total time:  1.727 s
+[INFO] Finished at: 2024-11-08T11:02:12-07:00
 [INFO] ------------------------------------------------------------------------
 [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.1:test (default-test) on project CSCI_440_Project: There are test failures.
 [ERROR] 
