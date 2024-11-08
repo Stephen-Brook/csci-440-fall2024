@@ -48,7 +48,21 @@ public class Track extends Model {
     }
 
     public static Track find(long i) {
-        return new Track();
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement("SELECT * FROM tracks WHERE TrackId = ?")) {
+
+            stmt.setLong(1, i);
+            ResultSet resultSet = stmt.executeQuery();
+
+            if (resultSet.next()) {
+                return new Track(resultSet);  // Constructor initializes a Track from a ResultSet row
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return null;  // Return null if no track was found with the given trackId
     }
 
     public static Long count() {
