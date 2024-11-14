@@ -12,6 +12,7 @@ public class Artist extends Model {
 
     Long artistId;
     String name;
+    String originalName;
 
     public Artist() {
     }
@@ -19,6 +20,7 @@ public class Artist extends Model {
     private Artist(ResultSet results) throws SQLException {
         name = results.getString("Name");
         artistId = results.getLong("ArtistId");
+        originalName = results.getString("Name");
     }
 
     public List<Album> getAlbums(){
@@ -39,6 +41,14 @@ public class Artist extends Model {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOriginalName(){
+        return originalName;
+    }
+
+    public void setOriginalName(String originalName) {
+        this.originalName = originalName;
     }
 
     public static List<Artist> all() {
@@ -83,14 +93,22 @@ public class Artist extends Model {
     }
 
     @Override
-    public boolean  update() {
+    public boolean update() {
         if (verify()) {
             try (Connection conn = DB.connect();
                  PreparedStatement stmt = conn.prepareStatement(
-                         "UPDATE artists SET name = ? WHERE artistID=?")) {
-                stmt.setString(1, this.getName());
-                stmt.setString(2, this.artistId.toString());
-                stmt.executeUpdate();
+                         "UPDATE artists SET Name = ? WHERE ArtistId = ? AND Name = ?")) {
+                stmt.setString(1, this.getName()); // New name to set
+                stmt.setLong(2, this.getArtistId()); // Artist ID to match
+                stmt.setString(3, this.getOriginalName()); // Original name to check for concurrency
+
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated == 0) {
+                    // If no rows were updated, someone else changed the data
+                    return false;
+                }
+                // Update the original name to the new value after a successful update
+                this.originalName = this.getName();
                 return true;
             } catch (SQLException sqlException) {
                 throw new RuntimeException(sqlException);
@@ -126,5 +144,4 @@ public class Artist extends Model {
             return false;
         }
     }
-
 }

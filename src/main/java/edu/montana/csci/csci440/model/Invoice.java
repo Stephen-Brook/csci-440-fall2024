@@ -4,10 +4,8 @@ import edu.montana.csci.csci440.util.DB;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Collections;
+import java.util.*;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Invoice extends Model {
 
@@ -25,6 +23,7 @@ public class Invoice extends Model {
 
     private Invoice(ResultSet results) throws SQLException {
         billingAddress = results.getString("BillingAddress");
+        billingCity = results.getString("BillingCity");
         billingState = results.getString("BillingState");
         billingCountry = results.getString("BillingCountry");
         billingPostalCode = results.getString("BillingPostalCode");
@@ -97,10 +96,38 @@ public class Invoice extends Model {
     }
 
     public static List<Invoice> all(int page, int count) {
-        return Collections.emptyList();
+        try {
+            try(Connection connect = DB.connect();
+                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM invoices  LIMIT ? OFFSET ?")) {
+                ArrayList<Invoice> result = new ArrayList<>();
+                stmt.setInt(1, count);
+                stmt.setInt(2, (page - 1) * count);
+                ResultSet resultSet = stmt.executeQuery();
+                while (resultSet.next()) {
+                    result.add(new Invoice(resultSet));
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Invoice find(long invoiceId) {
-        return new Invoice();
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement("SELECT * FROM invoices WHERE InvoiceId = ?")) {
+
+            stmt.setLong(1, invoiceId);
+            ResultSet resultSet = stmt.executeQuery();
+
+            if (resultSet.next()) {
+                return new Invoice(resultSet);  // Constructor initializes a Track from a ResultSet row
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return null;  // Return null if no track was found with the given trackId
     }
 }
