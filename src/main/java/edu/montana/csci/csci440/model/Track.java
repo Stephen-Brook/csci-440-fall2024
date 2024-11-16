@@ -44,9 +44,6 @@ public class Track extends Model {
         albumId = results.getLong("AlbumId");
         mediaTypeId = results.getLong("MediaTypeId");
         genreId = results.getLong("GenreId");
-
-//        albumTitle = results.getString("AlbumTitle");
-//        artistName = results.getString("ArtistName");
     }
 
     public static Track find(long i) {
