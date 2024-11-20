@@ -31,7 +31,7 @@ public class Homework5 extends DBTest {
         List<Map<String, Object>> tracks = exec("SELECT t.TrackId" +
                 " FROM tracks t" +
                 " JOIN invoice_items ii ON t.TrackId = ii.TrackId" +
-                " GROUP BY t.trackId" +
+                " GROUP BY t.TrackId" +
                 " HAVING COUNT(ii.InvoiceId) > 1");
         assertEquals(256, tracks.size());
 

@@ -60,6 +60,8 @@ public class Album extends Model {
 
     @Override
     public boolean create() {
+        System.out.println(this.getTitle());
+        System.out.println(this.getArtistId());
         if (verify()) {
             try (Connection conn = DB.connect();
                  PreparedStatement stmt = conn.prepareStatement(
@@ -80,12 +82,12 @@ public class Album extends Model {
     public boolean verify() {
         _errors.clear();
         if (getTitle() == null) {
-            addError("Title is null");
+            _errors.add("Title was null");
         }
         if (artistId == null) {
-            addError("ArtistId is null");
+            _errors.add("ArtistId was null");
         }
-        return !hasErrors();
+        return _errors.isEmpty();
     }
 
     public static List<Album> all() {
