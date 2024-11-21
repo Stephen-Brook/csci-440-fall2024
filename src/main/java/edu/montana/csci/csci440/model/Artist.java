@@ -144,4 +144,20 @@ public class Artist extends Model {
             return false;
         }
     }
+
+    public void delete() {
+        if (artistId == null) {
+            throw new IllegalStateException("Artist ID is required for deletion");
+        }
+
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement("DELETE FROM artists WHERE ArtistId = ?")) {
+
+            stmt.setLong(1, artistId);
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -60,9 +60,6 @@ public class Employee extends Model {
         if (firstName == null || "".equals(firstName)) {
             addError("FirstName can't be null or blank!");
         }
-        // TODO - add in additional validations:        finished
-        //   last name can't be null or blank
-        //   email can't be null or blank and must contain an @
         if (lastName == null || "".equals(lastName)) {
             addError("LastName can't be null or blank!");
         }

@@ -1,5 +1,7 @@
 package edu.montana.csci.csci440.controller;
 
+import edu.montana.csci.csci440.model.Album;
+import edu.montana.csci.csci440.model.MediaType;
 import edu.montana.csci.csci440.model.Track;
 import edu.montana.csci.csci440.util.Web;
 
@@ -20,7 +22,18 @@ public class TracksController extends BaseController {
         post("/tracks/new", (req, resp) -> {
             Track track = new Track();
 
-            // TODO update the track fields
+            track.setName(req.queryParams("Name"));
+            Album album = Album.find(asInt(req.queryParams("AlbumId")));
+            track.setAlbum(album);
+            track.setMediaTypeId(Long.valueOf(req.queryParams("MediaTypeId")));
+            track.setGenreId(Long.valueOf(req.queryParams("GenreId")));
+
+            String millisecondsParam = req.queryParams("Milliseconds");
+            String bytesParam = req.queryParams("Bytes");
+            String unitPriceParam = req.queryParams("UnitPrice");
+            track.setMilliseconds(Long.valueOf(millisecondsParam));
+            track.setBytes(Long.valueOf(bytesParam));
+            track.setUnitPrice(BigDecimal.valueOf(Long.parseLong(unitPriceParam)));
 
             if (track.create()) {
                 Web.showMessage("Created A Track!");

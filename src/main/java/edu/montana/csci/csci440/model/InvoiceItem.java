@@ -11,7 +11,7 @@ public class InvoiceItem extends Model {
     Long quantity;
 
     public Track getTrack() {
-        return null;
+        return Track.find(trackId);
     }
     public Invoice getInvoice() {
         return null;

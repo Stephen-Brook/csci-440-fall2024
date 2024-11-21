@@ -26,9 +26,6 @@ public class Playlist extends Model {
 
 
     public List<Track> getTracks(){
-        // TODO implement, order by track name
-        //composer may be artist
-//        return Collections.emptyList();
         List<Track> tracks = new ArrayList<>();
 
         try (Connection connect = DB.connect();

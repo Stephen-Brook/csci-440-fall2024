@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,8 +34,25 @@ public class Genre extends Model {
     }
 
     public static List<Genre> all() {
-        return Collections.emptyList();
+        return all(0, Integer.MAX_VALUE);
     }
 
+    public static List<Genre> all(int page, int count) {
+        try {
+            try(Connection connect = DB.connect();
+                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM genres LIMIT ? OFFSET ?")) {
+                ArrayList<Genre> result = new ArrayList<>();
+                stmt.setInt(1, count);
+                stmt.setInt(2, (page - 1) * count);
+                ResultSet resultSet = stmt.executeQuery();
+                while (resultSet.next()) {
+                    result.add(new Genre(resultSet));
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

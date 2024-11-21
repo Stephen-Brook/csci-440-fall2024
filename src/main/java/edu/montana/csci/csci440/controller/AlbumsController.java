@@ -1,6 +1,7 @@
 package edu.montana.csci.csci440.controller;
 
 import edu.montana.csci.csci440.model.Album;
+import edu.montana.csci.csci440.model.Artist;
 import edu.montana.csci.csci440.util.Web;
 
 import java.util.List;
@@ -18,7 +19,9 @@ public class AlbumsController extends BaseController {
 
         post("/albums/new", (req, resp) -> {
             Album album = new Album();
-            // TODO populate the album
+            album.setTitle(req.queryParams("Title"));
+            Artist artist = Artist.find(asInt(req.queryParams("ArtistId")));
+            album.setArtist(artist);
             if (album.create()) {
                 Web.showMessage("Created A Album!");
                 return Web.redirect("/albums/" + album.getAlbumId());

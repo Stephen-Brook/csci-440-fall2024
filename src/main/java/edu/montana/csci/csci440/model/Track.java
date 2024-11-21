@@ -73,14 +73,6 @@ public class Track extends Model {
     }
 
     public static Long count() {
-
-        // write query to count number of tracks
-        // check the redis cache
-        // if there is a value there return it
-        // else issue the query
-        //   save the count to redis
-        //   return the count
-
         try (Jedis jedis = new Jedis()) {
             // Check Redis cache
             String cachedCount = jedis.get(REDIS_CACHE_KEY);
@@ -96,19 +88,16 @@ public class Track extends Model {
                 if (resultSet.next()) {
                     Long count = resultSet.getLong("count");
 
-                    // Cache the result in Redis
+                    // Cache the result in Redis with a timeout of 1 hour
                     jedis.set(REDIS_CACHE_KEY, count.toString());
+                    jedis.expire(REDIS_CACHE_KEY, 3600); // 1 hour expiry
 
                     return count;
                 }
-
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }
-
-        // TODO - also invalidate cache
-
         return 0l;
     }
 
@@ -258,15 +247,43 @@ public class Track extends Model {
     }
 
     public String getArtistName() {
-        // TODO implement more efficiently
-        //  hint: cache on this model object
-        // introduce a field for artist name
+        if (artistName == null) {
+            artistName = ""; // Prevent repeated null lookups
+            try (Connection connect = DB.connect();
+                 PreparedStatement stmt = connect.prepareStatement(
+                         "SELECT artists.Name AS artistName " +
+                                 "FROM artists " +
+                                 "JOIN albums ON artists.ArtistId = albums.ArtistId " +
+                                 "WHERE albums.AlbumId = ?")) {
+
+                stmt.setLong(1, this.albumId);
+                ResultSet resultSet = stmt.executeQuery();
+                if (resultSet.next()) {
+                    artistName = resultSet.getString("artistName");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return artistName;
     }
 
     public String getAlbumTitle() {
-        // TODO implement more efficiently
-        //  hint: cache on this model object
+        if (albumTitle == null) {
+            albumTitle = ""; // Prevent repeated null lookups
+            try (Connection connect = DB.connect();
+                 PreparedStatement stmt = connect.prepareStatement(
+                         "SELECT Title FROM albums WHERE AlbumId = ?")) {
+
+                stmt.setLong(1, this.albumId);
+                ResultSet resultSet = stmt.executeQuery();
+                if (resultSet.next()) {
+                    albumTitle = resultSet.getString("Title");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return albumTitle;
     }
 
@@ -346,7 +363,28 @@ public class Track extends Model {
     }
 
     public static List<Track> forAlbum(Long albumId) {
-        return Collections.emptyList();
+        List<Track> tracks = new ArrayList<>();
+
+        // SQL query to fetch all tracks for a given album ID
+        String sql = "SELECT * FROM tracks WHERE AlbumId = ? ORDER BY Name";
+
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement(sql)) {
+
+            // Set the albumId parameter
+            stmt.setLong(1, albumId);
+
+            // Execute the query and process the results
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                tracks.add(new Track(resultSet));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching tracks for album ID: " + albumId, e);
+        }
+
+        return tracks;
     }
 
     // Sure would be nice if java supported default parameter values

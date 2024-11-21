@@ -21,7 +21,7 @@ public class Invoice extends Model {
         // new employee for insert
     }
 
-    private Invoice(ResultSet results) throws SQLException {
+    public Invoice(ResultSet results) throws SQLException {
         billingAddress = results.getString("BillingAddress");
         billingCity = results.getString("BillingCity");
         billingState = results.getString("BillingState");
@@ -31,9 +31,32 @@ public class Invoice extends Model {
         invoiceId = results.getLong("InvoiceId");
     }
 
-    public List<InvoiceItem> getInvoiceItems(){
-        //TODO implement
-        return Collections.emptyList();
+    public List<InvoiceItem> getInvoiceItems() {
+        List<InvoiceItem> invoiceItems = new ArrayList<>();
+
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement(
+                     "SELECT * FROM invoice_items WHERE InvoiceId = ?")) {
+
+            stmt.setLong(1, this.invoiceId);
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()) {
+                InvoiceItem item = new InvoiceItem();
+                item.setInvoiceLineId(resultSet.getLong("InvoiceLineId"));
+                item.setInvoiceId(resultSet.getLong("InvoiceId"));
+                item.setTrackId(resultSet.getLong("TrackId"));
+                item.setUnitPrice(resultSet.getBigDecimal("UnitPrice"));
+                item.setQuantity(resultSet.getLong("Quantity"));
+
+                invoiceItems.add(item);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return invoiceItems;
     }
     public Customer getCustomer() {
         return null;

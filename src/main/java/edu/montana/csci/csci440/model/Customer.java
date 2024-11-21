@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,11 +20,29 @@ public class Customer extends Model {
     private String email;
 
     public Employee getSupportRep() {
-         return Employee.find(supportRepId);
+        return Employee.find(supportRepId);
     }
 
-    public List<Invoice> getInvoices(){
-        return Collections.emptyList();
+    public List<Invoice> getInvoices() {
+        List<Invoice> invoices = new ArrayList<>();
+
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement(
+                     "SELECT * FROM invoices WHERE CustomerId = ? ORDER BY InvoiceId")) {
+
+            // Use customerId, not calling getInvoices recursively
+            stmt.setLong(1, this.customerId);
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()) {
+                invoices.add(new Invoice(resultSet)); // Assuming Invoice constructor works with ResultSet
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return invoices;
     }
 
     public Customer(){
@@ -61,22 +80,21 @@ public class Customer extends Model {
     }
 
     public static List<Customer> all(int page, int count) {
-        List<Customer> customers = new LinkedList<>();
         try {
-            try (Connection conn = DB.connect();
-                 PreparedStatement stmt = conn.prepareStatement(
-                         "SELECT * FROM Customers LIMIT ? OFFSET ?")) {
+            try(Connection connect = DB.connect();
+                PreparedStatement stmt = connect.prepareStatement("SELECT  * FROM customers  LIMIT ? OFFSET ?")) {
+                ArrayList<Customer> result = new ArrayList<>();
                 stmt.setInt(1, count);
                 stmt.setInt(2, (page - 1) * count);
                 ResultSet resultSet = stmt.executeQuery();
                 while (resultSet.next()) {
-                    customers.add(new Customer(resultSet));
+                    result.add(new Customer(resultSet));
                 }
+                return result;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return customers;
     }
 
     public static Customer find(long customerId) {
@@ -98,7 +116,23 @@ public class Customer extends Model {
     }
 
     public static List<Customer> forEmployee(long employeeId) {
-        return Collections.emptyList();
+        List<Customer> customers = new ArrayList<>();
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement(
+                     "SELECT * FROM customers WHERE SupportRepId = ? ORDER BY CustomerId")) {
+
+            // Set the SupportRepId parameter in the prepared statement
+            stmt.setLong(1, employeeId);
+            ResultSet resultSet = stmt.executeQuery();
+
+            // Iterate over the result set and add each customer to the list
+            while (resultSet.next()) {
+                customers.add(new Customer(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return customers;
     }
 
 }

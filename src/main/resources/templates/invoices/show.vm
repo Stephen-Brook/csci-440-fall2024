@@ -45,6 +45,9 @@
         <th>TrackId</th>
         <th>UnitPrice</th>
         <th>Quantity</th>
+        <th>Track Name</th>
+        <th>Album Name</th>
+        <th>Artist Name</th>
     </tr>
     </thead>
     <tbody>
@@ -54,6 +57,9 @@
             <td>$!item.TrackId</td>
             <td>$!item.UnitPrice</td>
             <td>$!item.Quantity</td>
+            <td>$!item.Track.Name</td>
+            <td>$!item.Track.Album.Title</td>
+            <td>$!item.Track.Album.Artist.Name</td>
         </tr>
         #end
         $web.pagingWidget($invoice.InvoiceItems)

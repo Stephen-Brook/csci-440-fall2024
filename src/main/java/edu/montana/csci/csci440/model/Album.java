@@ -1,6 +1,7 @@
 package edu.montana.csci.csci440.model;
 
 import edu.montana.csci.csci440.util.DB;
+import redis.clients.jedis.Jedis;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -81,7 +82,7 @@ public class Album extends Model {
     @Override
     public boolean verify() {
         _errors.clear();
-        if (getTitle() == null) {
+        if (title == null || title.isEmpty()) {
             _errors.add("Title was null");
         }
         if (artistId == null) {
@@ -131,8 +132,22 @@ public class Album extends Model {
     }
 
     public static List<Album> getForArtist(Long artistId) {
-        // TODO implement
-        return Collections.emptyList();
+        List<Album> albums = new ArrayList<>();
+        String query = "SELECT * FROM albums WHERE ArtistId = ?";
+
+        try (Connection conn = DB.connect();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setLong(1, artistId);
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()) {
+                albums.add(new Album(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return albums;
     }
 
     @Override
@@ -141,7 +156,7 @@ public class Album extends Model {
             try (Connection conn = DB.connect();
                  PreparedStatement stmt = conn.prepareStatement(
                          "UPDATE albums SET artistId=?, title=? WHERE albumId=?")) {
-                stmt.setString(1, this.getArtistId().toString());
+                stmt.setLong(1, this.getArtistId());
                 stmt.setString(2, this.getTitle());
                 stmt.setLong(3, this.getAlbumId());
                 stmt.executeUpdate();
@@ -151,6 +166,21 @@ public class Album extends Model {
             }
         } else {
             return false;
+        }
+    }
+
+    public void delete() {
+        if (albumId == null) {
+            throw new IllegalStateException("Album ID is required for deletion");
+        }
+
+        try (Connection connect = DB.connect();
+             PreparedStatement stmt = connect.prepareStatement("DELETE FROM albums WHERE AlbumId = ?")) {
+
+            stmt.setLong(1, albumId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
